@@ -15,8 +15,8 @@ export function FilterBar({ className, variant = "default" }: FilterBarProps) {
     const isTransparent = variant === "transparent";
 
     return (
-        <div className={cn("w-full overflow-x-auto pb-4 pt-2 no-scrollbar", className)}>
-            <div className="flex space-x-2 px-6 md:px-8">
+        <div className={cn("w-full overflow-x-auto pb-4 pt-4 no-scrollbar", className)}>
+            <div className="flex space-x-2 px-6 md:px-8 ">
                 {CATEGORIES.map((category) => (
                     <div
                         key={category}
