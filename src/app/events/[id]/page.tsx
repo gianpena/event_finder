@@ -81,15 +81,27 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                     </div>
                 </section>
 
-                <section className="space-y-3">
-                    <h3 className="text-lg font-semibold">Location</h3>
-                    <div className="aspect-video w-full rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-                        <div className="flex flex-col items-center gap-2">
-                            <MapPin className="h-8 w-8" />
-                            <span>Map Preview Placeholder</span>
+                {event.isPrivate ? (
+                    <section className="space-y-3">
+                        <h3 className="text-lg font-semibold">Location</h3>
+                        <div className="aspect-video w-full rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                            <div className="flex flex-col items-center gap-2">
+                                <MapPin className="h-8 w-8" />
+                                <span>RSVP to see location</span>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                ) : (
+                    <section className="space-y-3">
+                        <h3 className="text-lg font-semibold">Location</h3>
+                        <div className="aspect-video w-full rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                            <div className="flex flex-col items-center gap-2">
+                                <MapPin className="h-8 w-8" />
+                                <span>Placeholder</span>
+                            </div>
+                        </div>
+                    </section>
+                )}
             </main>
 
             <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">

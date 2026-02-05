@@ -2,6 +2,7 @@
 
 import Map, { Marker, Popup, type MapMouseEvent, MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
+import type Event from '../../../lib/data';
 import { useState, useMemo, useRef, useEffect } from "react";
 import { MOCK_EVENTS } from "@/lib/data";
 import { useEventStore } from "@/lib/store";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function EventMap() {
+export default function EventMap({ locations }: { locations?: Event[] }) {
     const { setSelectedEvent, selectedEventId, locateTrigger } = useEventStore();
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const mapRef = useRef<MapRef>(null);
@@ -75,7 +76,7 @@ export default function EventMap() {
 
     const pins = useMemo(
         () =>
-            MOCK_EVENTS.map((event) => (
+            (locations ? locations : MOCK_EVENTS).map((event) => (
                 <Marker
                     key={event.id}
                     longitude={event.coordinates[1]}
