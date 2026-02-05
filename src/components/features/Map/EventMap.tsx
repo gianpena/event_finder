@@ -50,7 +50,7 @@ export default function EventMap({ location }: { location?: Event }) {
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     setUserLocation({ lat: latitude, lng: longitude });
-                    if (mapRef.current) {
+                    if (mapRef.current && !location) {
                         mapRef.current.flyTo({
                             center: [longitude, latitude],
                             zoom: 14,
