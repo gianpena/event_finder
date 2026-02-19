@@ -1,3 +1,5 @@
+"use client";
+
 import { MOCK_EVENTS } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,9 +9,25 @@ import { notFound } from "next/navigation";
 import { Navbar } from "@/components/features/Navbar";
 import MapWrapper from "@/components/features/MapWrapper";
 
-export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
+export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const event = MOCK_EVENTS.find((e) => e.id === id);
+    const { isCalendarConnected, calendarEvents } = useEventStore();
+
+    // Calculate schedule compatibility
+    const compatibility = useMemo(() => {
+        if (!isCalendarConnected || calendarEvents.length === 0 || !event) {
+            return null;
+        }
+        return calculateCompatibility(event, calendarEvents);
+    }, [isCalendarConnected, calendarEvents, event]);
+
+    const conflict = useMemo(() => {
+        if (!isCalendarConnected || calendarEvents.length === 0 || !event) {
+            return null;
+        }
+        return detectConflict(event, calendarEvents);
+    }, [isCalendarConnected, calendarEvents, event]);
 
     if (!event) {
         notFound();
@@ -40,6 +58,18 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                         {event.isPrivate && <Badge variant="outline" className="bg-background/50">Private</Badge>}
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{event.title}</h1>
+
+                    {/* Schedule Compatibility */}
+                    {compatibility && (
+                        <div className="space-y-2">
+                            <ScheduleBadge compatibility={compatibility} />
+                            {conflict?.hasConflict && conflict.conflictingEvent && (
+                                <p className="text-sm text-muted-foreground">
+                                    ⚠️ Note: Conflicts with "{conflict.conflictingEvent.summary}" in your calendar
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex flex-col gap-3 text-muted-foreground">
                         <div className="flex items-center gap-2">
@@ -108,9 +138,12 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                         <span className="text-sm text-muted-foreground">Total</span>
                         <span className="text-xl font-bold">{event.price}</span>
                     </div>
-                    <Button size="lg" className="flex-1 sm:max-w-xs">
-                        {event.isPrivate ? "Request to Join" : "Join Event"}
-                    </Button>
+                    <div className="flex gap-2">
+                        <AddToCalendarButton eventId={event.id} variant="outline" />
+                        <Button size="lg" className="flex-1 sm:max-w-xs">
+                            {event.isPrivate ? "Request to Join" : "Join Event"}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -4,8 +4,12 @@ import { Navbar } from "@/components/features/Navbar";
 import { FilterBar } from "@/components/features/FilterBar";
 import MapWrapper from "@/components/features/MapWrapper";
 import { EventsDrawer } from "@/components/features/EventsDrawer";
+import { useCalendarCallback } from "@/hooks/useCalendarCallback";
 
 export default function Home() {
+  // Handle calendar OAuth callback
+  useCalendarCallback();
+
   return (
     <div className="relative h-screen w-full overflow-hidden bg-background">
       {/* Layer 1: Map Background */}
