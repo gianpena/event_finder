@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Search, User, CalendarPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CalendarConnectButton } from "@/components/features/CalendarConnectButton";
 import { cn } from "@/lib/utils";
 
 interface NavbarProps {
@@ -25,6 +28,7 @@ export function Navbar({ variant = "default" }: NavbarProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <CalendarConnectButton />
                     <Button variant="ghost" size="icon" asChild>
                         <Link href="/search">
                             <Search className="h-5 w-5" />

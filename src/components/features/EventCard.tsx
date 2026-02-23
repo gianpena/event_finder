@@ -1,10 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { Calendar, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
+import { ScheduleBadge } from "@/components/features/ScheduleBadge";
 import { Event } from "@/lib/data";
+import { useEventStore } from "@/lib/store";
+import { calculateCompatibility } from "@/lib/schedule-analyzer";
+import { useMemo } from "react";
 
 interface EventCardProps {
     event: Event;
@@ -12,6 +18,16 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, variant = "vertical" }: EventCardProps) {
+    const { isCalendarConnected, calendarEvents } = useEventStore();
+
+    // Calculate schedule compatibility if calendar is connected
+    const compatibility = useMemo(() => {
+        if (!isCalendarConnected || calendarEvents.length === 0) {
+            return null;
+        }
+        return calculateCompatibility(event, calendarEvents);
+    }, [isCalendarConnected, calendarEvents, event]);
+
     return (
         <Card className="overflow-hidden border-none shadow-none bg-transparent group">
             <Link href={`/events/${event.id}`}>
@@ -44,6 +60,11 @@ export function EventCard({ event, variant = "vertical" }: EventCardProps) {
                 <Link href={`/events/${event.id}`} className="group-hover:underline">
                     <h3 className="line-clamp-1 text-base font-semibold tracking-tight">{event.title}</h3>
                 </Link>
+                {compatibility && (
+                    <div className="mt-2">
+                        <ScheduleBadge compatibility={compatibility} size="sm" />
+                    </div>
+                )}
                 <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                     <MapPin className="h-3 w-3" />
                     <span className="line-clamp-1">{event.location}</span>
