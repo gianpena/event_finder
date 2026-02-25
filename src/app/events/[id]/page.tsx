@@ -1,13 +1,18 @@
 "use client";
 
+import { use, useMemo } from "react";
 import { MOCK_EVENTS } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Share2, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/features/Navbar";
 import MapWrapper from "@/components/features/MapWrapper";
+import { useEventStore } from "@/lib/store";
+import { calculateCompatibility, detectConflict } from "@/lib/schedule-analyzer";
+import { ScheduleBadge } from "@/components/features/ScheduleBadge";
+import { AddToCalendarButton } from "@/components/features/AddToCalendarButton";
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
