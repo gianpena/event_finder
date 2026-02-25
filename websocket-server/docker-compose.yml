@@ -1,0 +1,35 @@
+services:
+  websocket-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - socket-network
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: messages
+      MYSQL_USER: root
+    ports:
+        - "3306:3306"
+    networks:
+        - socket-network
+    volumes:
+        - mysql-data:/var/lib/mysql
+    restart: on-failure:3
+
+networks:
+  socket-network:
+    driver: bridge
+    name: socket-network
+
+volumes:
+  mysql-data:
