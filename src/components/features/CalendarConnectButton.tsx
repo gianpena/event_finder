@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, Link as LinkIcon, X } from 'lucide-react';
 import { useEventStore } from '@/lib/store';
 
 export function CalendarConnectButton() {
     const [isConnecting, setIsConnecting] = useState(false);
-    const { isCalendarConnected, connectCalendar, disconnectCalendar } = useEventStore();
+    const { isCalendarConnected, isCalendarSyncing, connectCalendar, disconnectCalendar } = useEventStore();
 
     async function handleConnect() {
         setIsConnecting(true);
@@ -31,6 +32,26 @@ export function CalendarConnectButton() {
         }
     }
 
+    if (isCalendarSyncing) {
+        return (
+            <Button variant="outline" size="sm" disabled className="gap-2">
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <span className="hidden sm:inline">
+                    <Skeleton className="h-3 w-16 rounded inline-block" />
+                </span>
+            </Button>
+        );
+    }
+
+    if (isConnecting) {
+        return (
+            <Button variant="outline" size="sm" disabled className="gap-2">
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <Skeleton className="h-3 w-20 rounded hidden sm:block" />
+            </Button>
+        );
+    }
+
     if (isCalendarConnected) {
         return (
             <Button
@@ -51,11 +72,10 @@ export function CalendarConnectButton() {
             variant="outline"
             size="sm"
             onClick={handleConnect}
-            disabled={isConnecting}
             className="gap-2"
         >
             <LinkIcon className="h-4 w-4" />
-            {isConnecting ? 'Connecting...' : 'Connect Calendar'}
+            Connect Calendar
         </Button>
     );
 }

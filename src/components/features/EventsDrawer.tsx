@@ -8,16 +8,37 @@ import {
 } from "@/components/ui/drawer";
 import { MOCK_EVENTS } from "@/lib/data";
 import { EventCard } from "./EventCard";
-import { useState } from "react";
+import { EventCardSkeleton } from "./EventCardSkeleton";
+import { useState, useEffect } from "react";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { useEventStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
+const PEEK_HEIGHT = "160px";
+const SKELETON_COUNT = 6;
+
 export function EventsDrawer() {
-    const [snap, setSnap] = useState<number | string | null>(0.25);
+    const [snap, setSnap] = useState<number | string | null>(PEEK_HEIGHT);
+    const [snapPoints, setSnapPoints] = useState<(string | number)[]>([PEEK_HEIGHT, 0.85, 1]);
+    const [isMounted, setIsMounted] = useState(false);
     const { filter } = useEventStore();
+
+    // Adapt mid snap point to viewport height
+    useEffect(() => {
+        const update = () => {
+            const h = window.innerHeight;
+            setSnapPoints([PEEK_HEIGHT, h < 700 ? 0.65 : 0.85, 1]);
+        };
+        update();
+        window.addEventListener("resize", update);
+        return () => window.removeEventListener("resize", update);
+    }, []);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const filteredEvents = MOCK_EVENTS.filter(event =>
         filter === "All" ? true : event.type === filter
@@ -27,7 +48,7 @@ export function EventsDrawer() {
         <Drawer
             open={true}
             modal={false}
-            snapPoints={[0.25, 0.85, 1]}
+            snapPoints={snapPoints}
             activeSnapPoint={snap}
             setActiveSnapPoint={setSnap}
             dismissible={false}
@@ -59,11 +80,16 @@ export function EventsDrawer() {
                         </DrawerHeader>
                         <div className="p-8 overflow-y-auto flex-1 pb-32">
                             <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-                                {filteredEvents.map((event) => (
-                                    <div key={event.id} className="hover:scale-[1.02] transition-transform duration-300">
-                                        <EventCard event={event} />
-                                    </div>
-                                ))}
+                                {!isMounted
+                                    ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+                                        <EventCardSkeleton key={i} />
+                                    ))
+                                    : filteredEvents.map((event) => (
+                                        <div key={event.id} className="hover:scale-[1.02] transition-transform duration-300">
+                                            <EventCard event={event} />
+                                        </div>
+                                    ))
+                                }
                             </div>
                         </div>
                     </div>
