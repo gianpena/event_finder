@@ -3,7 +3,11 @@ import { Server } from 'socket.io';
 import mysql from 'mysql2/promise';
 
 const server = createServer();
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:3000']
+    }
+});
 
 const pool = mysql.createPool({
     host: 'socket-server-db',
