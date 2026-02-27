@@ -18,11 +18,13 @@ interface EventState {
 
     // Calendar integration
     isCalendarConnected: boolean;
+    isCalendarSyncing: boolean;
     calendarAccessToken: string | null;
     calendarEvents: CalendarEvent[];
     connectCalendar: (token: string) => void;
     disconnectCalendar: () => void;
     setCalendarEvents: (events: CalendarEvent[]) => void;
+    setCalendarSyncing: (syncing: boolean) => void;
 }
 
 export const useEventStore = create<EventState>()(
@@ -49,6 +51,7 @@ export const useEventStore = create<EventState>()(
 
             // Calendar state
             isCalendarConnected: false,
+            isCalendarSyncing: false,
             calendarAccessToken: null,
             calendarEvents: [],
             connectCalendar: (token) => set({
@@ -57,10 +60,12 @@ export const useEventStore = create<EventState>()(
             }),
             disconnectCalendar: () => set({
                 isCalendarConnected: false,
+                isCalendarSyncing: false,
                 calendarAccessToken: null,
                 calendarEvents: []
             }),
             setCalendarEvents: (events) => set({ calendarEvents: events }),
+            setCalendarSyncing: (syncing) => set({ isCalendarSyncing: syncing }),
         }),
         {
             name: 'vibecheck-storage',
