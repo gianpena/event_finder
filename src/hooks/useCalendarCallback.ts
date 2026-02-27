@@ -12,7 +12,7 @@ import { addDays } from 'date-fns';
 export function useCalendarCallback() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { connectCalendar, setCalendarEvents, disconnectCalendar } = useEventStore();
+    const { connectCalendar, setCalendarEvents, disconnectCalendar, setCalendarSyncing } = useEventStore();
 
     useEffect(() => {
         const token = searchParams.get('calendar_token');
@@ -31,6 +31,7 @@ export function useCalendarCallback() {
         if (token) {
             // Save token to store
             connectCalendar(token);
+            setCalendarSyncing(true);
 
             // Fetch calendar events
             fetchCalendarEvents(token);
@@ -63,6 +64,8 @@ export function useCalendarCallback() {
             }
         } catch (error) {
             console.error('Failed to fetch calendar events:', error);
+        } finally {
+            setCalendarSyncing(false);
         }
     }
 }
