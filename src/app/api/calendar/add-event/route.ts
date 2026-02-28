@@ -24,8 +24,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Use the ISO startAt field for reliable date parsing
-        const startTime = new Date(vibeCheckEvent.startAt);
+        // Parse event date and time
+        const eventDate = new Date(vibeCheckEvent.date);
+        const [hours, minutes] = vibeCheckEvent.time.split(':').map(Number);
+
+        const startTime = new Date(eventDate);
+        startTime.setHours(hours, minutes, 0, 0);
 
         // Assume 2-hour duration
         const endTime = addHours(startTime, 2);
