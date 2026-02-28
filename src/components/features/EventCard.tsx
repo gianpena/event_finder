@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { LiquidGlass } from "@/components/ui/liquid-glass";
 import { ScheduleBadge } from "@/components/features/ScheduleBadge";
 import { Event } from "@/lib/data";
@@ -74,8 +73,10 @@ export function EventCard({ event, variant = "vertical" }: EventCardProps) {
                         <img src={event.host.avatar} alt={event.host.name} className="h-5 w-5 rounded-full border-2 border-background object-cover" />
                         <span className="pl-3 text-[10px] text-muted-foreground self-center">Hosted by {event.host.name}</span>
                     </div>
-                    <Button size="sm" variant={event.isPrivate ? "outline" : "default"}>
-                        {event.isPrivate ? "Request" : "Book"}
+                    <Button size="sm" variant={event.isPrivate ? "outline" : "default"} asChild>
+                        <Link href={`/events/${event.id}`}>
+                            {event.isPrivate ? "Request" : "Join"}
+                        </Link>
                     </Button>
                 </div>
             </div>

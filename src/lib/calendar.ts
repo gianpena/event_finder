@@ -56,6 +56,32 @@ export async function getTokensFromCode(code: string, redirectUri: string) {
 }
 
 /**
+ * Refresh an expired access token using a stored refresh token.
+ * Returns the new access_token and its expiry_date (ms since epoch).
+ */
+export async function refreshAccessToken(
+    refreshToken: string
+): Promise<{ access_token: string; expiry_date: number }> {
+    const oauth2Client = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET
+    );
+
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+    const { credentials } = await oauth2Client.refreshAccessToken();
+
+    if (!credentials.access_token) {
+        throw new Error('No access token returned from refresh');
+    }
+
+    return {
+        access_token: credentials.access_token,
+        expiry_date: credentials.expiry_date ?? Date.now() + 3600 * 1000,
+    };
+}
+
+/**
  * Create authenticated Google Calendar client
  */
 export function getCalendarClient(accessToken: string) {

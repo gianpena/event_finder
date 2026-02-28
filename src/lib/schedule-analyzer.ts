@@ -1,6 +1,6 @@
 import { CalendarEvent } from './calendar';
 import { Event } from './data';
-import { parseISO, isWithinInterval, isBefore, isAfter, addHours, format } from 'date-fns';
+import { addHours, format } from 'date-fns';
 
 export interface TimeSlot {
     start: Date;
@@ -90,12 +90,8 @@ export function detectConflict(
     vibeCheckEvent: Event,
     calendarEvents: CalendarEvent[]
 ): ConflictResult {
-    // Parse event date and time
-    const eventDate = new Date(vibeCheckEvent.date);
-    const [hours, minutes] = vibeCheckEvent.time.split(':').map(Number);
-
-    const eventStart = new Date(eventDate);
-    eventStart.setHours(hours, minutes, 0, 0);
+    // Use the ISO startAt field for reliable date parsing
+    const eventStart = new Date(vibeCheckEvent.startAt);
 
     // Assume 2-hour duration for events
     const eventEnd = addHours(eventStart, 2);
@@ -136,12 +132,8 @@ export function calculateCompatibility(
     let score = 0;
     const conflicts: CalendarEvent[] = [];
 
-    // Parse event time
-    const eventDate = new Date(vibeCheckEvent.date);
-    const [hours, minutes] = vibeCheckEvent.time.split(':').map(Number);
-
-    const eventStart = new Date(eventDate);
-    eventStart.setHours(hours, minutes, 0, 0);
+    // Use the ISO startAt field for reliable date parsing
+    const eventStart = new Date(vibeCheckEvent.startAt);
 
     const eventEnd = addHours(eventStart, 2);
 

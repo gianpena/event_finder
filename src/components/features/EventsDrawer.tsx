@@ -6,7 +6,6 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/components/ui/drawer";
-import { MOCK_EVENTS } from "@/lib/data";
 import { EventCard } from "./EventCard";
 import { EventCardSkeleton } from "./EventCardSkeleton";
 import { useState, useEffect } from "react";
@@ -23,7 +22,7 @@ export function EventsDrawer() {
     const [snap, setSnap] = useState<number | string | null>(PEEK_HEIGHT);
     const [snapPoints, setSnapPoints] = useState<(string | number)[]>([PEEK_HEIGHT, 0.85, 1]);
     const [isMounted, setIsMounted] = useState(false);
-    const { filter } = useEventStore();
+    const { filter, events, isLoadingEvents } = useEventStore();
 
     // Adapt mid snap point to viewport height
     useEffect(() => {
@@ -40,9 +39,11 @@ export function EventsDrawer() {
         setIsMounted(true);
     }, []);
 
-    const filteredEvents = MOCK_EVENTS.filter(event =>
+    const filteredEvents = events.filter(event =>
         filter === "All" ? true : event.type === filter
     );
+
+    const showSkeletons = !isMounted || isLoadingEvents;
 
     return (
         <Drawer
@@ -80,7 +81,7 @@ export function EventsDrawer() {
                         </DrawerHeader>
                         <div className="p-8 overflow-y-auto flex-1 pb-32">
                             <div className="grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-                                {!isMounted
+                                {showSkeletons
                                     ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                                         <EventCardSkeleton key={i} />
                                     ))
