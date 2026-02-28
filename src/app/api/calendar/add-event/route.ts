@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addEventToCalendar } from '@/lib/calendar';
-import { MOCK_EVENTS } from '@/lib/data';
+import { supabase, dbToEvent } from '@/lib/supabase';
 import { addHours } from 'date-fns';
 
 export async function POST(request: NextRequest) {
@@ -14,24 +14,24 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Find the event
-        const vibeCheckEvent = MOCK_EVENTS.find(e => e.id === eventId);
+        // Fetch the event from Supabase
+        const { data, error } = await supabase
+            .from('events')
+            .select('*')
+            .eq('id', eventId)
+            .single();
 
-        if (!vibeCheckEvent) {
+        if (error || !data) {
             return NextResponse.json(
                 { error: 'Event not found' },
                 { status: 404 }
             );
         }
 
-        // Parse event date and time
-        const eventDate = new Date(vibeCheckEvent.date);
-        const [hours, minutes] = vibeCheckEvent.time.split(':').map(Number);
+        const vibeCheckEvent = dbToEvent(data);
 
-        const startTime = new Date(eventDate);
-        startTime.setHours(hours, minutes, 0, 0);
-
-        // Assume 2-hour duration
+        // Use the ISO startAt field directly for accurate time
+        const startTime = new Date(vibeCheckEvent.startAt);
         const endTime = addHours(startTime, 2);
 
         // Create event description with link back to VibeCheck

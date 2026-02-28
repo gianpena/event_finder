@@ -1,6 +1,40 @@
 import { createClient } from "@supabase/supabase-js";
 import { Event } from "@/lib/data";
 
+export interface Profile {
+    userId: string;
+    displayName: string | null;
+    bio: string | null;
+    location: string | null;
+    avatarUrl: string | null;
+    instagram: string | null;
+    twitter: string | null;
+}
+
+export function dbToProfile(row: Record<string, unknown>): Profile {
+    return {
+        userId: row.user_id as string,
+        displayName: row.display_name as string | null,
+        bio: row.bio as string | null,
+        location: row.location as string | null,
+        avatarUrl: row.avatar_url as string | null,
+        instagram: row.instagram as string | null,
+        twitter: row.twitter as string | null,
+    };
+}
+
+export function profileToDb(p: Partial<Profile> & { userId: string }) {
+    return {
+        user_id: p.userId,
+        ...(p.displayName !== undefined && { display_name: p.displayName }),
+        ...(p.bio !== undefined && { bio: p.bio }),
+        ...(p.location !== undefined && { location: p.location }),
+        ...(p.avatarUrl !== undefined && { avatar_url: p.avatarUrl }),
+        ...(p.instagram !== undefined && { instagram: p.instagram }),
+        ...(p.twitter !== undefined && { twitter: p.twitter }),
+    };
+}
+
 export const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
