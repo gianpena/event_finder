@@ -164,6 +164,7 @@ You need to obtain the following keys from their respective services. All are **
 | `NEXTAUTH_SECRET` | Self-generated | Run `openssl rand -base64 32` in your terminal |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase | [supabase.com/dashboard](https://supabase.com/dashboard) → Project Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase | Same as above |
+| `NEXT_PUBLIC_WEBSOCKET_URL` | WebSocket server | `http(s)?://<IP>:<PORT>` |
 
 ### Google OAuth — required redirect URIs
 

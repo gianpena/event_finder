@@ -4,7 +4,8 @@ import { use, useMemo, useState, useEffect } from "react";
 import { Event } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, CalendarCheck, Clock, MapPin, Star } from "lucide-react";
+import {Calendar, CalendarCheck, Clock, MapPin, Star, MessageCircle} from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/features/Navbar";
 import MapWrapper from "@/components/features/MapWrapper";
@@ -231,6 +232,11 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
                             {event!.isPrivate && !joined && <span className="text-xs text-muted-foreground">Private · request will be reviewed</span>}
                             <div className="flex gap-2">
                                 <AddToCalendarButton eventId={event!.id} variant="outline" />
+                                {(!event!.isPrivate || joined) && (
+                                    <Link href={`/events/${event!.id}/chat`}>
+                                        <MessageCircle className="h-5 w-5" />
+                                    </Link>
+                                )}
                                 <Button size="lg" className="flex-1 sm:max-w-xs" onClick={handleJoin} disabled={isJoining} variant={joined ? "outline" : "default"}>
                                     {joined ? (event!.isPrivate ? "Cancel Request" : "Leave Event") : event!.isPrivate ? "Request to Join" : "Join Event"}
                                 </Button>

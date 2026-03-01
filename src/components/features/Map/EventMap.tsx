@@ -3,10 +3,10 @@
 import Map, { Marker, Popup, type MapMouseEvent, MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { Event } from '@/lib/data';
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { MOCK_EVENTS } from "@/lib/data";
 import { useEventStore } from "@/lib/store";
-import { MapPin, Calendar, Clock, X } from "lucide-react";
+import { MapPin, Calendar, Clock, X, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -36,12 +36,21 @@ export default function EventMap({ location }: { location?: Event }) {
         MOCK_EVENTS.find(e => e.id === selectedEventId),
         [selectedEventId]);
 
+    const handleLocateMe = useCallback(() => {
+        if (userLocation && mapRef.current) {
+            mapRef.current.flyTo({
+                center: [userLocation.lng, userLocation.lat],
+                zoom: 14,
+                duration: 2000
+            });
+        }
+    }, [userLocation]);
     // Watch for store trigger
     useEffect(() => {
         if (locateTrigger > 0) {
             handleLocateMe();
         }
-    }, [locateTrigger]);
+    }, [locateTrigger, handleLocateMe]);
 
     useEffect(() => {
         if ("geolocation" in navigator) {
@@ -63,16 +72,6 @@ export default function EventMap({ location }: { location?: Event }) {
             );
         }
     }, []);
-
-    const handleLocateMe = () => {
-        if (userLocation && mapRef.current) {
-            mapRef.current.flyTo({
-                center: [userLocation.lng, userLocation.lat],
-                zoom: 14,
-                duration: 2000
-            });
-        }
-    };
 
     const pins = useMemo(
         () =>
@@ -206,7 +205,12 @@ export default function EventMap({ location }: { location?: Event }) {
                                         <img src={selectedEvent.host.avatar} alt={selectedEvent.host.name} className="h-5 w-5 rounded-full object-cover" />
                                         <span className="text-xs font-medium text-muted-foreground truncate max-w-[80px]">{selectedEvent.host.name}</span>
                                     </div>
-                                    <Button className="h-6 text-[10px] px-3 font-semibold" asChild>
+                                    {!selectedEvent.isPrivate && (
+                                        <Link href={`events/${selectedEvent.id}/chat`}>
+                                            <MessageCircle className="h-4 w-4 text-muted-foreground"/>
+                                        </Link>
+                                    )}
+                                    <Button className="h-6 text-[10px] px-3 font-semibold" asChild  >
                                         <Link href={`/events/${selectedEvent.id}`}>View</Link>
                                     </Button>
                                 </div>
