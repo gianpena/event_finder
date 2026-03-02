@@ -5,16 +5,19 @@ import { use, useState, useRef, useEffect } from 'react';
 import { Navbar } from '@/components/features/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MOCK_EVENTS } from '@/lib/data';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
 import { Send, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useEventStore } from "@/lib/store";
+import { useSession } from "next-auth/react";
 
 interface ChatMessage {
     author: string;
     content: string;
     timestamp: Date;
     isCurrentUser: boolean;
+    avatarUrl?: string;
 }
 
 interface SystemMessage {
@@ -25,28 +28,71 @@ interface SystemMessage {
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const event = MOCK_EVENTS.find((e) => e.id === id);
+    const { events, fetchEvents } = useEventStore();
+    const { data: session } = useSession();
     const [messages, setMessages] = useState<(ChatMessage | SystemMessage)[]>([]);
     const [inputValue, setInputValue] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const socketRef = useRef<ReturnType<typeof io> | null>(null);
     const usernameRef = useRef<string>('');
-    if (!event) {
-        notFound();
-    }
+    const avatarUrlRef = useRef<string>('');
+
+    // Fetch events if store is empty
+    useEffect(() => {
+        async function init() {
+            if (events.length === 0) {
+                await fetchEvents();
+            }
+            setIsLoading(false);
+        }
+        init();
+    }, [events.length, fetchEvents]);
+
+    // Fetch previous messages from database
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchPreviousMessages = async () => {
+            try {
+                const httpUrl = process.env.NEXT_PUBLIC_HTTP_URL || 'http://localhost:8081';
+                const response = await fetch(`${httpUrl}/messages?event=${id}`);
+                if (!response.ok) {
+                    console.error('Failed to fetch previous messages:', response.statusText);
+                    return;
+                }
+                const dbMessages = await response.json();
+
+                // Convert database messages to ChatMessage format
+                const formattedMessages: ChatMessage[] = dbMessages.map((msg: any) => ({
+                    author: msg.sender,
+                    content: msg.message,
+                    timestamp: new Date(msg.timestamp),
+                    isCurrentUser: msg.sender === session?.user?.name,
+                    avatarUrl: msg.avatar_url || undefined,
+                }));
+
+                setMessages(formattedMessages);
+            } catch (error) {
+                console.error('Error fetching previous messages:', error);
+            }
+        };
+
+        fetchPreviousMessages();
+    }, [id, session?.user?.name]);
+
+    const event = events.find(e => e.id === id);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
-
-
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
     const handleSendMessage = () => {
-        if (!inputValue.trim()) {
+        if (!inputValue.trim() || !event) {
             return;
         }
 
@@ -55,6 +101,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             content: inputValue,
             timestamp: new Date(),
             isCurrentUser: true,
+            avatarUrl: session?.user?.image || undefined,
         };
 
         const socket = socketRef.current;
@@ -63,6 +110,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                 room: event.id,
                 username: usernameRef.current,
                 message: inputValue,
+                avatarUrl: avatarUrlRef.current,
             });
             setMessages((prev) => [...prev, newMessage]);
             setInputValue('');
@@ -82,6 +130,8 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     };
 
     useEffect(() => {
+        if (!event) return;
+
         const socket = io(process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080");
         socketRef.current = socket;
         console.log('Connecting to WebSocket server...');
@@ -89,9 +139,11 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
         socket.on('connect', () => {
             console.log('Connected to WebSocket server.');
             const room = event.id;
-            const username = `client-${Math.floor(Math.random() * 1000) + 1}`;
+            const username = session?.user?.name || `client-${Math.floor(Math.random() * 1000) + 1}`;
+            const avatarUrl = session?.user?.image || '';
             usernameRef.current = username;
-            socket.emit('join', { room, username });
+            avatarUrlRef.current = avatarUrl;
+            socket.emit('join', { room, username, avatarUrl });
         });
 
         socket.on('join', msg => {
@@ -114,12 +166,13 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
 
         socket.on('message', msg => {
             const foreignUser = msg.username;
-            const { message } = msg;
+            const { message, avatarUrl } = msg;
             setMessages(prev => [...prev, {
                 author: foreignUser,
                 content: message,
                 timestamp: new Date(),
                 isCurrentUser: false,
+                avatarUrl: avatarUrl || undefined,
             }]);
         });
 
@@ -127,8 +180,21 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
             socket.disconnect();
             socketRef.current = null;
             usernameRef.current = '';
+            avatarUrlRef.current = '';
         };
-    }, [event.id]);
+    }, [event?.id, session?.user?.name, session?.user?.image]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <p className="text-muted-foreground">Loading...</p>
+            </div>
+        );
+    }
+
+    if (!event) {
+        notFound();
+    }
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
@@ -170,6 +236,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                                 key={`msg-${index}`}
                                 className={`flex gap-3 ${message.isCurrentUser ? 'flex-row-reverse' : ''}`}
                             >
+                                {/* Avatar */}
+                                <Avatar className="h-8 w-8 flex-shrink-0">
+                                    {message.avatarUrl ? (
+                                        <AvatarImage src={message.avatarUrl} alt={message.author} />
+                                    ) : null}
+                                    <AvatarFallback className="text-xs">
+                                        {message.author.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+
                                 <div
                                     className={`flex flex-col max-w-xs ${
                                         message.isCurrentUser ? 'items-end' : 'items-start'

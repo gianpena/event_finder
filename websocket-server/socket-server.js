@@ -1,11 +1,15 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import mysql from 'mysql2/promise';
+import express from 'express';
+import cors from 'cors';
 
 const server = createServer();
+const allowed_origins = ['http://localhost:3000'];
+
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:3000']
+        origin: allowed_origins
     }
 });
 
@@ -33,23 +37,23 @@ function broadcastToRoom(room, msgType, msg, socketToExclude = null) {
 io.on('connection', async socket => {
 
     socket.on('join', msg => {
-        const { room, username } = msg;
+        const { room, username, avatarUrl } = msg;
         rooms[room] = rooms[room] ?? new Set();
         rooms[room].add(socket);
-        broadcastToRoom(room, 'join', { username }, socket);
+        broadcastToRoom(room, 'join', { username, avatarUrl }, socket);
 
 
         socket.on('disconnect', () => {
             rooms[room].delete(socket);
-            broadcastToRoom(room, 'leave', { username });
+            broadcastToRoom(room, 'leave', { username, avatarUrl });
         });
 
         socket.on('message', async msg => {
             broadcastToRoom(room, 'message', msg, socket);
             const { username, message } = msg;
             await pool.execute(
-                'INSERT INTO message_history VALUES (?, ?, ?, NOW())',
-                [room, username, message]
+                'INSERT INTO message_history VALUES (?, ?, ?, ?, NOW())',
+                [room, username, message, avatarUrl]
             );
         });
 
@@ -61,3 +65,21 @@ io.on('connection', async socket => {
 
 server.listen(8080);
 console.log('socket.io server listening on 8080!');
+
+const httpServer = express();
+httpServer.use(cors({
+    origin: allowed_origins
+}));
+httpServer.use(express.json());
+
+httpServer.get('/messages', async (req, res) => {
+    const { event } = req.query;
+    const [rows] = await pool.execute(
+        'SELECT * FROM message_history WHERE room_id = ? ORDER BY timestamp ASC',
+        [event]
+    );
+
+    res.status(200).json(rows);
+});
+
+httpServer.listen(8081);

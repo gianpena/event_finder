@@ -165,6 +165,7 @@ You need to obtain the following keys from their respective services. All are **
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase | [supabase.com/dashboard](https://supabase.com/dashboard) → Project Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase | Same as above |
 | `NEXT_PUBLIC_WEBSOCKET_URL` | WebSocket server | `http(s)?://<IP>:<PORT>` |
+| `NEXT_PUBLIC_HTTP_URL` | HTTP server | same as above URL |
 
 ### Google OAuth — required redirect URIs
 
