@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 
 const server = createServer();
-const allowed_origins = ['http://localhost:3000'];
+const allowed_origins = ['http://localhost:3000', 'http://eventfinder.gianpena.xyz:3003'];
 
 const io = new Server(server, {
     cors: {
