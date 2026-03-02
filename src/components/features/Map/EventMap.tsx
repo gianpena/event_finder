@@ -4,7 +4,6 @@ import Map, { Marker, Popup, type MapMouseEvent, MapRef } from "react-map-gl/map
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { Event } from '@/lib/data';
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { MOCK_EVENTS } from "@/lib/data";
 import { useEventStore } from "@/lib/store";
 import { MapPin, Calendar, Clock, X, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function EventMap({ location }: { location?: Event }) {
-    const { setSelectedEvent, selectedEventId, locateTrigger } = useEventStore();
+    const { setSelectedEvent, selectedEventId, locateTrigger, events } = useEventStore();
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const mapRef = useRef<MapRef>(null);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -33,7 +32,7 @@ export default function EventMap({ location }: { location?: Event }) {
     };
 
     const selectedEvent = useMemo(() =>
-        MOCK_EVENTS.find(e => e.id === selectedEventId),
+        events.find(e => e.id === selectedEventId),
         [selectedEventId]);
 
     const handleLocateMe = useCallback(() => {
@@ -75,7 +74,7 @@ export default function EventMap({ location }: { location?: Event }) {
 
     const pins = useMemo(
         () =>
-            (location ? [location] : MOCK_EVENTS).map((event) => (
+            (location ? [location] : events).map((event) => (
                 <Marker
                     key={event.id}
                     longitude={event.coordinates[1]}
