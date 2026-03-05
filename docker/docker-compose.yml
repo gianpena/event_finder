@@ -1,7 +1,25 @@
 services:
-  websocket-server:
+  eventfinder:
     build:
       context: .
+      dockerfile: Dockerfile
+      args:
+        - PORT=3000
+    container_name: eventfinder
+    env_file:
+      - ../.env
+    ports:
+      - "${PORT}:3000"
+    networks:
+      - socket-network
+    depends_on:
+      - websocket-server
+      - db
+    restart: unless-stopped
+
+  websocket-server:
+    build:
+      context: ./websocket-server
       dockerfile: Dockerfile
     container_name: websocket-server
     environment:
@@ -30,7 +48,7 @@ services:
         - socket-network
     volumes:
         - mysql-data:/var/lib/mysql
-        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        - ./websocket-server/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: on-failure:3
 
 networks:
